@@ -185,6 +185,7 @@ public class JavaMetricProvider implements MetricProvider {
         metrics.add(new TrueCommentRatioMethodMetric());
         metrics.add(new FanInMethodMetric());
         metrics.add(new FanOutMethodMetric());
+        metrics.add(new DepthInheritanceMethodMetric());
     }
 
     private static void initializeModuleMetrics(Collection<Metric> metrics) {

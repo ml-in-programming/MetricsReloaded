@@ -31,6 +31,7 @@ import com.sixrr.metrics.profile.MetricsProfileRepository;
 import com.sixrr.metrics.ui.dialogs.ProfileSelectionPanel;
 import com.sixrr.metrics.ui.metricdisplay.MetricsToolWindow;
 import com.sixrr.metrics.utils.MetricsReloadedBundle;
+import com.sixrr.stockmetrics.utils.ProjectContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,6 +49,7 @@ public class ProjectMetricsAction extends BaseAnalysisAction {
         final MetricsProfile profile = repository.getCurrentProfile();
         final MetricsToolWindow toolWindow = MetricsToolWindow.getInstance(project);
         final MetricsRunImpl metricsRun = new MetricsRunImpl();
+        ProjectContainerUtil.setProject(project);
         new MetricsExecutionContextImpl(project, analysisScope) {
 
             @Override
