@@ -107,6 +107,7 @@ public class JavaMetricProvider implements MetricProvider {
         metrics.add(new FanInClassMetric());
         metrics.add(new FanOutClassMetric());
         metrics.add(new DepthInheritanceClassMetric());
+        metrics.add(new NumberOfChildrenClassMetric());
     }
 
     private static void initializeInterfaceMetrics(Collection<Metric> metrics) {
@@ -361,6 +362,7 @@ public class JavaMetricProvider implements MetricProvider {
         profile.addMetric(DepthInheritanceClassMetric.class);
         profile.addMetric(DepthInheritanceMethodMetric.class);
         profile.addMetric(NumberOfChildrenMethodMetric.class);
+        profile.addMetric(NumberOfChildrenClassMetric.class);
         return profile;
     }
 
