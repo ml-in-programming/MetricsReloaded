@@ -106,6 +106,7 @@ public class JavaMetricProvider implements MetricProvider {
         metrics.add(new WeightedMethodComplexityMetric());
         metrics.add(new FanInClassMetric());
         metrics.add(new FanOutClassMetric());
+        metrics.add(new DepthInheritanceClassMetric());
     }
 
     private static void initializeInterfaceMetrics(Collection<Metric> metrics) {
@@ -346,7 +347,19 @@ public class JavaMetricProvider implements MetricProvider {
         out.add(createMoodProfile());
         out.add(createTestProfile());
         out.add(createFanProfile());
+        out.add(createAutomaticRefactoringProfile());
         return out;
+    }
+
+    private static PrebuiltMetricProfile createAutomaticRefactoringProfile() {
+        final PrebuiltMetricProfile profile = new PrebuiltMetricProfile(StockMetricsBundle.message("automatic.refactoring.profile.name"));
+        profile.addMetric(FanInClassMetric.class);
+        profile.addMetric(FanOutClassMetric.class);
+        profile.addMetric(FanInMethodMetric.class);
+        profile.addMetric(FanOutMethodMetric.class);
+        profile.addMetric(DepthInheritanceClassMetric.class);
+        profile.addMetric(DepthInheritanceMethodMetric.class);
+        return profile;
     }
 
     private static PrebuiltMetricProfile createFanProfile() {

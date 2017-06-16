@@ -14,22 +14,15 @@
  *  limitations under the License.
  */
 
-package com.sixrr.stockmetrics.methodCalculators;
+package com.sixrr.stockmetrics.classCalculators;
 
-import com.intellij.ide.projectView.impl.nodes.PackageUtil;
-import com.intellij.openapi.project.*;
-import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
-import com.intellij.ui.ListUtil;
 import com.sixrr.metrics.utils.ClassUtils;
 import com.sixrr.stockmetrics.utils.ProjectContainerUtil;
 
-import java.util.*;
+import java.util.Set;
 
-import static org.bouncycastle.asn1.iana.IANAObjectIdentifiers.directory;
-
-public class DepthInInheritanceMethodCalculator extends MethodCalculator {
+public class DepthInheritanceClassCalculator extends ClassCalculator {
 
     @Override
     protected PsiElementVisitor createVisitor() {
@@ -39,9 +32,8 @@ public class DepthInInheritanceMethodCalculator extends MethodCalculator {
     private class Visitor extends JavaRecursiveElementVisitor {
 
         @Override
-        public void visitMethod(PsiMethod method) {
+        public void visitClass(PsiClass psiClass) {
             Set<PsiPackage> packages = ProjectContainerUtil.getPackages();
-            PsiClass psiClass = (PsiClass) method.getParent();
             int counter = 0;
             boolean implimentedInProject = true;
             while (ClassUtils.isConcrete(psiClass) && implimentedInProject) {
@@ -60,7 +52,7 @@ public class DepthInInheritanceMethodCalculator extends MethodCalculator {
                 }
                 psiClass = parentClass;
             }
-            postMetric(method, counter);
+            postMetric(psiClass, counter);
         }
     }
 }

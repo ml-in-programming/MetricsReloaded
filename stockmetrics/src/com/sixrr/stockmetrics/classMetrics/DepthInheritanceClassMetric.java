@@ -14,15 +14,15 @@
  *  limitations under the License.
  */
 
-package com.sixrr.stockmetrics.methodMetrics;
+package com.sixrr.stockmetrics.classMetrics;
 
 import com.sixrr.metrics.MetricCalculator;
 import com.sixrr.metrics.MetricType;
+import com.sixrr.stockmetrics.classCalculators.DepthInheritanceClassCalculator;
 import com.sixrr.stockmetrics.i18n.StockMetricsBundle;
-import com.sixrr.stockmetrics.methodCalculators.DepthInheritanceMethodCalculator;
 import org.jetbrains.annotations.NotNull;
 
-public class DepthInheritanceMethodMetric extends MethodMetric {
+public class DepthInheritanceClassMetric extends ClassMetric {
 
     @NotNull
     @Override
@@ -45,6 +45,6 @@ public class DepthInheritanceMethodMetric extends MethodMetric {
     @NotNull
     @Override
     public MetricCalculator createCalculator() {
-        return new DepthInheritanceMethodCalculator();
+        return new DepthInheritanceClassCalculator();
     }
 }
