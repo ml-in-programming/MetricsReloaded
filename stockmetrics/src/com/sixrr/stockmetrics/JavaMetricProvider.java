@@ -187,6 +187,7 @@ public class JavaMetricProvider implements MetricProvider {
         metrics.add(new FanInMethodMetric());
         metrics.add(new FanOutMethodMetric());
         metrics.add(new DepthInheritanceMethodMetric());
+        metrics.add(new NumberOfChildrenMethodMetric());
     }
 
     private static void initializeModuleMetrics(Collection<Metric> metrics) {
@@ -359,6 +360,7 @@ public class JavaMetricProvider implements MetricProvider {
         profile.addMetric(FanOutMethodMetric.class);
         profile.addMetric(DepthInheritanceClassMetric.class);
         profile.addMetric(DepthInheritanceMethodMetric.class);
+        profile.addMetric(NumberOfChildrenMethodMetric.class);
         return profile;
     }
 
