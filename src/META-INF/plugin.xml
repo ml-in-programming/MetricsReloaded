@@ -60,6 +60,7 @@
     <applicationService serviceImplementation="com.sixrr.metrics.profile.MetricsProfileRepository"/>
     <projectService serviceInterface="com.sixrr.metrics.ui.metricdisplay.MetricsToolWindow"
                     serviceImplementation="com.sixrr.metrics.ui.metricdisplay.MetricsToolWindowImpl"/>
+    <projectService serviceImplementation="com.sixrr.metrics.plugin.RefactorRequestGUI"/>
     <exportable serviceInterface="com.sixrr.metrics.profile.MetricsProfileRepository"/>
   </extensions>
   <extensions defaultExtensionNs="MetricsReloaded">
@@ -68,7 +69,7 @@
 
   <actions>
     <group>
-      <action id="Metrics.ProjectMetricsAction" class="com.sixrr.metrics.plugin.ProjectMetricsAction"
+      <action id="Metrics.ProjectMetricsAction" class="com.sixrr.metrics.plugin.RefactorRequestAction"
               text="Calculate Metrics..."/>
       <!--action id="Metrics.ViewOfflineMetricsResults"
               class="com.sixrr.metrics.offline.ViewOfflineMetricsResultsAction"

@@ -18,6 +18,7 @@ package com.sixrr.stockmetrics.classCalculators;
 
 import com.intellij.psi.*;
 import com.intellij.util.containers.ContainerUtil;
+import com.sixrr.metrics.utils.ClassUtils;
 import com.sixrr.stockmetrics.utils.ProjectContainerUtil;
 
 import java.util.HashSet;
@@ -34,6 +35,9 @@ public class NumberOfChildrenClassCalculator extends ClassCalculator {
 
         @Override
         public void visitClass(PsiClass psiClass) {
+            if (ClassUtils.isAnonymous(psiClass)) {
+                return;
+            }
             Set<PsiPackage> packages = ProjectContainerUtil.getPackages();
             Set<PsiClass> classes = new HashSet<PsiClass>();
             for (PsiPackage p : packages) {

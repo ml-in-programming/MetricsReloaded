@@ -40,25 +40,14 @@ public class DepthInheritanceMethodCalculator extends MethodCalculator {
 
         @Override
         public void visitMethod(PsiMethod method) {
+            if (ClassUtils.isAnonymous(method.getContainingClass())) {
+                return;
+            }
             Set<PsiPackage> packages = ProjectContainerUtil.getPackages();
             PsiClass psiClass = (PsiClass) method.getParent();
-            int counter = 0;
-            boolean implimentedInProject = true;
-            while (ClassUtils.isConcrete(psiClass) && implimentedInProject) {
+            int counter = 0;while (psiClass != null && ProjectContainerUtil.getClasses().contains(psiClass)) {
                 counter++;
-                PsiClass parentClass = psiClass.getSuperClass();
-                implimentedInProject = false;
-                if (parentClass != null) {
-                    for (PsiPackage p : ClassUtils.calculatePackagesRecursive(parentClass)) {
-                        PsiPackage p1 = p;
-                        implimentedInProject = implimentedInProject || packages.contains(p1);
-                        while (p1.getParentPackage() != null) {
-                            p1 = p1.getParentPackage();
-                            implimentedInProject = implimentedInProject || packages.contains(p1);
-                        }
-                    }
-                }
-                psiClass = parentClass;
+                psiClass = psiClass.getSuperClass();
             }
             postMetric(method, counter);
         }

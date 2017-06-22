@@ -22,10 +22,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.sixrr.metrics.Metric;
 import com.sixrr.metrics.MetricsExecutionContext;
 import com.sixrr.metrics.MetricsResultsHolder;
-import com.sixrr.stockmetrics.utils.FieldUsageMap;
-import com.sixrr.stockmetrics.utils.FieldUsageMapImpl;
-import com.sixrr.stockmetrics.utils.MethodCallMap;
-import com.sixrr.stockmetrics.utils.MethodCallMapImpl;
+import com.sixrr.metrics.utils.ClassUtils;
+import com.sixrr.stockmetrics.utils.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,8 +36,9 @@ import java.util.Stack;
 /**
  * @author Aleksandr Chudov.
  */
-public class FanOutClassCalculator extends FanClassCalculator {
-    private final Stack<PsiClass> classes = new Stack<PsiClass>();
+public class FanOutClassCalculator extends ClassCalculator {
+
+
 
     @Override
     protected PsiElementVisitor createVisitor() {
@@ -47,55 +46,55 @@ public class FanOutClassCalculator extends FanClassCalculator {
     }
 
     private class Visitor extends JavaRecursiveElementVisitor {
-
         @Override
-        public void visitClass(PsiClass aClass) {
-            if (!isConcreteClass(aClass)) {
+        public void visitClass(PsiClass c) {
+            if (ClassUtils.isAnonymous(c)) {
                 return;
             }
-            if (!metrics.containsKey(aClass)) {
-                metrics.put(aClass, new HashSet<PsiClass>());
-            }
-            classes.push(aClass);
-            visitedClasses.add(aClass);
-            super.visitClass(aClass);
-            classes.pop();
-            final FieldUsageMap map = executionContext.getUserData(fieldUsageKey);
-            final PsiField[] fields = aClass.getFields();
-            for (final PsiField field : fields) {
-                final Set<PsiReference> references = map.calculateFieldUsagePoints(field);
-                for (final PsiReference reference : references) {
-                    final PsiElement element = reference.getElement();
-                    final PsiClass fieldClass = PsiTreeUtil.getParentOfType(element, PsiClass.class);
-                    if (fieldClass == null || fieldClass.equals(aClass)) {
-                        continue;
+            Set<PsiClass> classes = new HashSet<PsiClass>();
+            for (PsiField f : c.getAllFields()) {
+                if (f.getType() instanceof PsiClassType) {
+                    PsiClass type = ((PsiClassType)f.getType()).resolve();
+                    if (type != null) {
+                        classes.add(type);
                     }
-                    final Set<PsiClass> s = metrics.containsKey(fieldClass) ? metrics.get(fieldClass) : new HashSet<PsiClass>();
-                    s.add(aClass);
-                    metrics.put(fieldClass, s);
                 }
             }
+            for (PsiMethod m : c.getAllMethods()) {
+                if (m.getBody() != null) {
+                    for (PsiStatement s : m.getBody().getStatements()) {
+                        classes.addAll(findInChildren(s));
+                    }
+                }
+            }
+            classes.retainAll(ProjectContainerUtil.getClasses());
+            classes.remove(c);
+            postMetric(c, classes.size());
         }
 
-        @Override
-        public void visitLambdaExpression(PsiLambdaExpression expression) {
+        private Set<PsiClass> findInChildren(PsiElement el) {
+            HashSet<PsiClass> classes = new HashSet<PsiClass>();
+            if (el instanceof PsiReference) {
+                PsiElement res = ((PsiReference) el).resolve();
+                if (res != null && res instanceof PsiMethod) {
+                    classes.add(((PsiMethod) res).getContainingClass());
+                }
+            }
+            for (PsiElement e : el.getChildren()) {
+                classes.addAll(findInChildren(e));
+            }
+            return classes;
         }
-
-        @Override
-        public void visitCallExpression(PsiCallExpression callExpression) {
-            super.visitCallExpression(callExpression);
-            if (classes.empty()) {
+    }/**/
+        /*@Override
+        public void visitClass(PsiClass aClass) {
+            if (ClassUtils.isAnonymous(aClass)) {
                 return;
             }
-            final PsiMethod method = callExpression.resolveMethod();
-            if (method == null || classes.peek().equals(method.getContainingClass())) {
-                return;
-            }
-            final PsiClass aClass = method.getContainingClass();
-            if (aClass == null) {
-                return;
-            }
-            metrics.get(classes.peek()).add(aClass);
+            Set<PsiElement> classes = ProjectContainerUtil.getClassUsers(aClass);
+            classes.retainAll(ProjectContainerUtil.getClasses());
+            classes.remove(aClass);
+            postMetric(aClass, classes.size());
         }
-    }
+    }/**/
 }

@@ -37,6 +37,9 @@ public class NumberOfChildrenMethodCalculator extends MethodCalculator {
 
         @Override
         public void visitMethod(PsiMethod method) {
+            if (ClassUtils.isAnonymous(method.getContainingClass())) {
+                return;
+            }
             Set<PsiPackage> packages = ProjectContainerUtil.getPackages();
             Set<PsiClass> classes = new HashSet<PsiClass>();
             for (PsiPackage p : packages) {

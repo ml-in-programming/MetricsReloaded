@@ -19,57 +19,54 @@ package com.sixrr.stockmetrics.methodCalculators;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.sixrr.metrics.utils.BucketedCount;
+import com.sixrr.metrics.utils.ClassUtils;
 import com.sixrr.metrics.utils.MethodUtils;
+import com.sixrr.stockmetrics.utils.ProjectContainerUtil;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * @author Aleksandr Chudov.
  */
 public class FanOutMethodCalculator extends MethodCalculator {
-    private final Collection<PsiMethod> visitedMethods = new ArrayList<PsiMethod>();
-    private final BucketedCount<PsiMethod> metrics = new BucketedCount<PsiMethod>();
-    private final Stack<PsiMethod> methods = new Stack<PsiMethod>();
 
     @Override
     protected PsiElementVisitor createVisitor() {
         return new Visitor();
     }
 
-    @Override
-    public void endMetricsRun() {
-        for (final PsiMethod method : visitedMethods) {
-            postMetric(method, metrics.getBucketValue(method));
-        }
-        super.endMetricsRun();
-    }
-
     private class Visitor extends JavaRecursiveElementVisitor {
         @Override
         public void visitMethod(PsiMethod method) {
-            methods.push(method);
-            visitedMethods.add(method);
-            super.visitMethod(method);
-            methods.pop();
-        }
-
-        @Override
-        public void visitLambdaExpression(PsiLambdaExpression expression) {
-        }
-
-        @Override
-        public void visitCallExpression(PsiCallExpression callExpression) {
-            super.visitCallExpression(callExpression);
-            if (methods.empty()) {
+            if (ClassUtils.isAnonymous(method.getContainingClass())) {
                 return;
             }
-            final PsiMethod method = callExpression.resolveMethod();
-            if (method == null || methods.peek().equals(method)) {
-                return;
+            Set<PsiMethod> methods = new HashSet<PsiMethod>();
+            if (method.getBody() !=  null) {
+                for (PsiStatement s : method.getBody().getStatements()) {
+                    methods.addAll(findInChildren(s));
+                }
             }
-            metrics.incrementBucketValue(methods.peek());
+            methods.retainAll(ProjectContainerUtil.getMethods());
+            methods.remove(method);
+            for (PsiMethod m : method.getContainingClass().getAllMethods()) {
+                methods.remove(m);
+            }
+            postMetric(method, methods.size());
+        }
+
+        private Set<PsiMethod> findInChildren(PsiElement el) {
+            Set<PsiMethod> methods = new HashSet<PsiMethod>();
+            if (el instanceof PsiReference) {
+                PsiElement res = ((PsiReference) el).resolve();
+                if (res != null && res instanceof PsiMethod) {
+                    methods.add((PsiMethod) res);
+                }
+            }
+            for (PsiElement e : el.getChildren()) {
+                methods.addAll(findInChildren(e));
+            }
+            return methods;
         }
     }
 }

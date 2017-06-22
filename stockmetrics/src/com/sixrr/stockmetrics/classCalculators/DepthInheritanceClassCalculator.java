@@ -33,26 +33,18 @@ public class DepthInheritanceClassCalculator extends ClassCalculator {
 
         @Override
         public void visitClass(PsiClass psiClass) {
+            if (ClassUtils.isAnonymous(psiClass)) {
+                return;
+            }
+            PsiClass baseClass = psiClass;
             Set<PsiPackage> packages = ProjectContainerUtil.getPackages();
             int counter = 0;
             boolean implimentedInProject = true;
-            while (ClassUtils.isConcrete(psiClass) && implimentedInProject) {
+            while (psiClass != null && ProjectContainerUtil.getClasses().contains(psiClass)) {
                 counter++;
-                PsiClass parentClass = psiClass.getSuperClass();
-                implimentedInProject = false;
-                if (parentClass != null) {
-                    for (PsiPackage p : ClassUtils.calculatePackagesRecursive(parentClass)) {
-                        PsiPackage p1 = p;
-                        implimentedInProject = implimentedInProject || packages.contains(p1);
-                        while (p1.getParentPackage() != null) {
-                            p1 = p1.getParentPackage();
-                            implimentedInProject = implimentedInProject || packages.contains(p1);
-                        }
-                    }
-                }
-                psiClass = parentClass;
+                psiClass = psiClass.getSuperClass();
             }
-            postMetric(psiClass, counter);
+            postMetric(baseClass, counter);
         }
     }
 }

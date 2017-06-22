@@ -18,26 +18,15 @@ package com.sixrr.stockmetrics.methodCalculators;
 
 import com.intellij.psi.*;
 import com.sixrr.metrics.utils.BucketedCount;
+import com.sixrr.metrics.utils.ClassUtils;
+import com.sixrr.stockmetrics.utils.ProjectContainerUtil;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * @author Aleksandr Chudov.
  */
 public class FanInMethodCalculator extends MethodCalculator {
-    private final BucketedCount<PsiMethod> metrics = new BucketedCount<PsiMethod>();
-    private final Collection<PsiMethod> visitedMethods = new ArrayList<PsiMethod>();
-    private final Stack<PsiMethod> methods = new Stack<PsiMethod>();
-
-    @Override
-    public void endMetricsRun() {
-        for (PsiMethod method : visitedMethods) {
-            postMetric(method, metrics.getBucketValue(method));
-        }
-        super.endMetricsRun();
-    }
 
     @Override
     protected PsiElementVisitor createVisitor() {
@@ -47,24 +36,31 @@ public class FanInMethodCalculator extends MethodCalculator {
     private class Visitor extends JavaRecursiveElementVisitor {
         @Override
         public void visitMethod(PsiMethod method) {
-            methods.push(method);
-            visitedMethods.add(method);
-            super.visitMethod(method);
-            methods.pop();
-        }
-
-        @Override
-        public void visitLambdaExpression(PsiLambdaExpression expression) {
-        }
-
-        @Override
-        public void visitCallExpression(PsiCallExpression callExpression) {
-            super.visitCallExpression(callExpression);
-            final PsiMethod method = callExpression.resolveMethod();
-            if (method == null || !methods.empty() && methods.peek().equals(method)) {
+            if (ClassUtils.isAnonymous(method.getContainingClass())) {
                 return;
             }
-            metrics.incrementBucketValue(method);
+            Set<PsiElement> methods = ProjectContainerUtil.getMethodUsers(method);
+            methods.retainAll(ProjectContainerUtil.getMethods());
+            //methods.remove(method);
+            for (PsiMethod m : method.getContainingClass().getAllMethods()) {
+                methods.remove(m);
+            }
+            postMetric(method, methods.size());
+        }
+
+        private boolean findInChildren(PsiElement el, PsiMethod cl) {
+            if (el instanceof PsiReference) {
+                PsiElement res = ((PsiReference) el).resolve();
+                if (res != null && cl.equals(res)) {
+                    return true;
+                }
+            }
+            for (PsiElement e : el.getChildren()) {
+                if (findInChildren(e, cl)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
